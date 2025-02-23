@@ -1,0 +1,17 @@
+version: 1.0
+long_title: "Custom Operations: An Introduction to Programming GPUs and CPUs with Mojo"
+short_title: "Custom Operations: An Introduction"
+author: "Brad Larson"
+author_image: "author/bradlarson.jpg"
+author_url: "https://www.linkedin.com/in/brad-larson-3549a5291/"
+github_repo: "https://github.com/modular/max-recipes/tree/main/custom-ops-introduction"
+date: "23-02-2025"
+difficulty: "beginner"
+tags:
+  - max-graph
+  - gpu-programming
+
+tasks:
+  - magic run add_one
+  - magic run vector_addition
+  - magic run mandelbrot
