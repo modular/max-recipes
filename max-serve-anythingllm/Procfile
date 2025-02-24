@@ -1,4 +1,0 @@
-ui: export STORAGE_LOCATION=./data && docker run -p 3001:3001 --name anythingllm-max --cap-add SYS_ADMIN -v ${STORAGE_LOCATION}:/app/server/storage -v ${STORAGE_LOCATION}/.env:/app/server/.env -e STORAGE_DIR="/app/server/storage" mintplexlabs/anythingllm 
-# max: source .env 2>/dev/null || true && max-pipelines serve --huggingface-repo-id=deepseek-ai/DeepSeek-R1-Distill-Llama-8B --weight-path=lmstudio-community/DeepSeek-R1-Distill-Llama-8B-GGUF/DeepSeek-R1-Distill-Llama-8B-Q4_K_M.gguf
-# max: max-pipelines serve --max-length=16384 --max-batch-size=1 --huggingface-repo-id=deepseek-ai/DeepSeek-R1-Distill-Llama-8B --weight-path=lmstudio-community/DeepSeek-R1-Distill-Llama-8B-GGUF/DeepSeek-R1-Distill-Llama-8B-Q4_K_M.gguf
-max: max-pipelines serve --max-length=16384 --max-batch-size=1 --huggingface-repo-id=modularai/Llama-3.1-8B-Instruct-GGUF

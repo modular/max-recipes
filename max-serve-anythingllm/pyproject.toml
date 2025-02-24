@@ -23,12 +23,19 @@ platforms = ["linux-64", "linux-aarch64", "osx-arm64"]
 
 [tool.pixi.pypi-dependencies]
 max_serve_anythingllm = { path = ".", editable = true }
+tomli = ">=2.0.0,<3.0.0"
+
+[tool.pixi.activation.env]
+STORAGE_LOCATION = "./data"
 
 [tool.pixi.tasks]
-# app = { cmd = "honcho start", depends-on = "clean" }
-app = { cmd = "honcho start" }
-clean = "honcho -f Procfile.clean start"
+app = "python main.py"
+ui = "docker run -p 3001:3001 --name anythingllm-max --cap-add SYS_ADMIN -v $STORAGE_LOCATION:/app/server/storage -v $STORAGE_LOCATION/.env:/app/server/.env -e STORAGE_DIR=\"/app/server/storage\" mintplexlabs/anythingllm"
+llama = "max-pipelines serve  --max-length=16384 --max-batch-size=1 --model-path=meta-llama/Llama-3.2-1B-Instruct --weight-path=bartowski/Llama-3.2-1B-Instruct-GGUF/Llama-3.2-1B-Instruct-Q4_K_M.gguf"
+clean = "pkill -f \"max-pipelines serve\" || true && lsof -ti:8000,3001 | xargs -r kill -9 2>/dev/null || true && docker rm -f anythingllm-max 2>/dev/null || true"
 
 [tool.pixi.dependencies]
 max-pipelines = ">=25.2.0.dev2025022405,<26"
 honcho = ">=2.0.0,<3"
+tomli = ">=2.2.1,<3"
+python-dotenv = ">=1.0.1,<2"
