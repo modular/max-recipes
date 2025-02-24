@@ -1,0 +1,5 @@
+.pixi
+*.egg-info
+.magic
+pixi.lock
+__pycache__
