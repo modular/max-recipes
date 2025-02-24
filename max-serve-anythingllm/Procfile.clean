@@ -1,0 +1,3 @@
+cleanup-max: pkill -f "max-pipelines serve" || true
+cleanup-ports: lsof -ti:8000,3001 | xargs -r kill -9 2>/dev/null || true
+cleanup-docker: docker rm -f anythingllm-max 2>/dev/null || true
