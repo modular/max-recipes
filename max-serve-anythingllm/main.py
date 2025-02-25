@@ -7,7 +7,7 @@ import tomli
 from dotenv import load_dotenv
 
 
-TASKS = [ "llama", "ui" ]
+TASKS = [ "llm", "ui" ]
 
 
 def run_tasks():

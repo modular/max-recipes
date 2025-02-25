@@ -1,0 +1,17 @@
+version: 1.0
+long_title: "Use AnythingLLM with MAX Serve to chat with DeepSeek R1"
+short_title: "Use AnythingLLM and DeepSeek R1 with MAX Serve"
+author: "Bill Welense"
+author_image: "author/billw.jpg"
+author_url: "https://www.linkedin.com/in/welense/"
+github_repo: "https://github.com/modular/max-recipes/tree/main/max-serve-anythingllm"
+date: "26-02-2025"
+difficulty: "beginner"
+tags:
+  - max-serve
+  - anythingllm
+  - llama3
+
+tasks:
+  - magic run app
+  - magic run clean
