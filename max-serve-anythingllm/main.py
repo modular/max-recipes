@@ -10,7 +10,11 @@ from dotenv import load_dotenv
 TASKS = [ "llama", "ui" ]
 
 
-def run_tasks():   
+def run_tasks():
+    """
+    Runs the tasks specified in the TASKS list. This includes loading environment
+    variables, setting up the task manager, and starting the tasks.
+    """   
     load_dotenv(".env.max")  
     env = os.environ.copy()
     
@@ -28,28 +32,37 @@ def run_tasks():
 
 
 def initial_setup():
-    # Read the storage location from pyproject.toml
+    """
+    Initializes persistent storage for AnythingLLM. Reads storage location from
+    the pyproject.toml file. If the directory and/or .env file don't already exist,
+    it creates the directory and ensures an empty .env file is present within it.
+    """
+
     with open("pyproject.toml", "rb") as f:
         pyproject_data = tomli.load(f)
-        data_dir = pyproject_data.get("tool", {}).get("pixi", {}).get("activation", {}).get("env", {}).get("STORAGE_LOCATION")
+        data_dir = (
+            pyproject_data.get("tool", {})
+                .get("pixi", {})
+                .get("activation", {})
+                .get("env", {})
+                .get("STORAGE_LOCATION")
+        )
         if data_dir is None:
             raise ValueError("STORAGE_LOCATION not found in pyproject.toml")
     
-    # Create the directory if it doesn't exist
     if not os.path.exists(data_dir):
         os.makedirs(data_dir)
         print(f"Created directory: {data_dir}")
     
-    # Check if .env exists and create an empty file if not
     env_file = os.path.join(data_dir, ".env")
     if not os.path.exists(env_file):
-        with open(env_file, "w"):
-            pass  # Create empty file
+        open(env_file, "w").close()  # Create empty file
         print(f"Created empty file: {env_file}")
 
 
 def cleanup():
-    # Check if the clean task exists in pyproject.toml and run it
+    """Checks if the `clean` task exists in pyproject.toml and runs it."""
+
     with open("pyproject.toml", "rb") as f:
         pyproject_data = tomli.load(f)
         tasks = pyproject_data.get("tool", {}).get("pixi", {}).get("tasks", {})
