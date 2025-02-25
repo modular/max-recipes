@@ -1,7 +1,13 @@
+# Project files
 .pixi
 *.egg-info
 .magic
 pixi.lock
+
+# Python cache
 __pycache__
-data
-.env.max
+
+# Data and environment files
+data/
+.env*
+!.env.sample
