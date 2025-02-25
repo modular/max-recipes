@@ -15,20 +15,23 @@ def run_tasks():
     Runs the tasks specified in the TASKS list. This includes loading environment
     variables, setting up the task manager, and starting the tasks.
     """   
-    load_dotenv(".env.max")  
-    env = os.environ.copy()
-    
-    manager = honcho.manager.Manager()
-
-    for task in TASKS:
-        manager.add_process(task, f"magic run {task}", env=env)
-
     try:
+        load_dotenv(".env.max")  
+        env = os.environ.copy()
+        
+        manager = honcho.manager.Manager()
+
+        for task in TASKS:
+            manager.add_process(task, f"magic run {task}", env=env)
+
         manager.loop()
         sys.exit(manager.returncode)
     except KeyboardInterrupt:
         print("\nShutting down...")
         sys.exit(0)
+    except Exception as e:
+        print(f"Error: {e}")
+        sys.exit(1)
 
 
 def initial_setup():
@@ -45,10 +48,10 @@ def initial_setup():
                 .get("pixi", {})
                 .get("activation", {})
                 .get("env", {})
-                .get("STORAGE_LOCATION")
+                .get("UI_STORAGE_LOCATION")
         )
         if data_dir is None:
-            raise ValueError("STORAGE_LOCATION not found in pyproject.toml")
+            raise ValueError("UI_STORAGE_LOCATION not found in pyproject.toml")
     
     if not os.path.exists(data_dir):
         os.makedirs(data_dir)
