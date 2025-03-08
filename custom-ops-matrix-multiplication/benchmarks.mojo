@@ -167,6 +167,7 @@ def matmul():
         bench_matmul_kernel["tiled_register"]()
         bench_matmul_kernel["block_tiled"]()
         bench_matmul_kernel["block_tiled_vectorized"]()
+        bench_matmul_kernel["tensor_core"]()
 
     bench.config.verbose_metric_names = False
     print(bench)

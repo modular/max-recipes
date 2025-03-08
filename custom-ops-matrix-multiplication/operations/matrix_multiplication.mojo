@@ -968,6 +968,7 @@ struct MatrixMultiplication[algorithm: StringLiteral]:
                     block_dim=(NUM_THREADS),
                 )
             elif algorithm == "tensor_core":
+                constrained[""]
                 alias BM = 64
                 alias BN = 64
                 alias BK = 32
@@ -975,7 +976,7 @@ struct MatrixMultiplication[algorithm: StringLiteral]:
                 alias WN = 32
                 alias MMA_M = 16
                 alias MMA_N = 8
-                alias MMA_K = 8
+                alias MMA_K = 4
                 alias NUM_WARPS = (BM // WM) * (BN // WN)
                 gpu_ctx.enqueue_function[
                     tensor_core_matrix_multiplication[
