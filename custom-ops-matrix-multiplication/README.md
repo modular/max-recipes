@@ -339,30 +339,44 @@ This leads to an almost tenfold jump in benchmarks on A100.
 
 Shared memory on the GPU is far faster to access than global memory, so a next
 step is to rework the matrix multiplication to tile the computation and load
-values into shared memory. The input matrices A and B are loaded into shared 
-memory in tiles of size BM x BK and BK x BN, respectively. Within the tile, 
-values are accessed from shared memory, significantly reducing the memory access
-latency in between arithmetic operations. Since each value in shared memory is used by BK threads (32 in this case), this greatly reduces the number of reads
-from global memory.
+values into shared memory. The signature for this kernel is the same as the
+previous two, with the addition of a new `BK` parameter, representing the tile
+size along the K axis.
+
+The input matrices A and B are loaded into shared memory in tiles of size BM x
+BK and BK x BN, respectively. Within the tile, values are accessed from shared
+memory, significantly reducing the memory access latency in between arithmetic
+operations. Since each value in shared memory is used by BK threads (32 in this
+case), this greatly reduces the number of reads from global memory.
 
 <img src="./images/matrix_multiplication_tiled_dark.png" class="darkModeOnly">
 <img src="./images/matrix_multiplication_tiled.png" class="lightModeOnly">
 
-This version corresponds to "Kernel 3: Shared Memory Cache-Blocking" in Simon's 
+This version corresponds to "Kernel 3: Shared Memory Cache-Blocking" in Simon's
 blog post.
 
-Each thread is still computing a single output value, but it calculates a partial
-result for each tile worth of input data, and accumulates the partial results 
-to calculate the final value. 
+Each thread is still computing a single output value, but it calculates a
+partial result for each tile worth of input data, and accumulates the partial
+results to calculate the final value.
 
-The `LayoutTensor` `tile()` method provides a view to one tile of a tensor, and it
-serves multiple purposes here.
+We'll walk through the interesting part of the kernel.
+
+The `LayoutTensor` `tile()` method provides a view to one tile of a tensor,
+without copying any data. It serves multiple purposes here. First, for the
+destination tile:
+
+```mojo
+var col = thread_idx.x % BN
+var row = thread_idx.x // BN
+
+var dst = c.tile[BM, BN](block_idx.y, block_idx.x)
+```
 
 The `dst` value is a view of the chunk of the output tensor that the current
 block is responsible for generating. `dst` is a 32x32 chunk of the output
 tensor, but instead of the 32x32 thread blocks used for previous kernels, this
 kernel is invoked with a one-dimensional thread block of 32*32 threads. The
-threads are mapped onto the output values in row-major order, like this:
+threads are mapped onto the output tile in row-major order, like this:
 
 <img src="./images/tiled_dst_tile_dark.png" class="darkModeOnly">
 <img src="./images/tiled_dst_tile.png" class="lightModeOnly">
@@ -371,67 +385,62 @@ As in the previous example, accessing memory in this order is more efficient for
 the GPU, since it can coalesce adjacent memory accesses for adjacent threads in
 the same warp.
 
-This kernel uses the `LayoutTensorBuild` struct (imported as `tb` for brevity)
-to allocate layout tensors in shared memory to hold cached chunks of the input
-tensors.
+Next the kernel uses the `LayoutTensorBuild` struct (imported as `tb` for
+brevity) to allocate layout tensors in shared memory to hold cached chunks of
+the input tensors.
+
+```mojo
+var a_smem = tb[dtype]().row_major[BM, BK]().shared().alloc()
+var b_smem = tb[dtype]().row_major[BK, BN]().shared().alloc()
+
+var dst_reg: c.element_type = 0
+```
+
+The kernel then iterates across the input matrices, loading tiles into shared
+memory.
 
 The `copy_dram_to_sram_async()` function deserves special note. This takes the
 place of the CUDA pattern of instructing each thread which value or values to
 copy to shared memory. The `thread_layout` parameter associates individual
 threads with values, and the function ensures efficient memory copies.
 
-A full implementation of a tiled matrix multiplication in Mojo looks like the
-following:
-
 ```mojo
-fn tiled_matrix_multiplication[
-    dtype: DType,
-    a_layout: Layout,
-    b_layout: Layout,
-    c_layout: Layout,
-    BM: Int,
-    BN: Int,
-    BK: Int,
-    NUM_THREADS: Int,
-](
-    a: LayoutTensor[dtype, a_layout, MutableAnyOrigin],
-    b: LayoutTensor[dtype, b_layout, MutableAnyOrigin],
-    c: LayoutTensor[dtype, c_layout, MutableAnyOrigin],
-):
-    var col = thread_idx.x % BN
-    var row = thread_idx.x // BN
+for block in range(b.dim(0) // BK):
+    alias load_a_layout = Layout.row_major(NUM_THREADS // BK, BK)
+    alias load_b_layout = Layout.row_major(BK, NUM_THREADS // BK)
 
-    var dst = c.tile[BM, BN](block_idx.y, block_idx.x)
+    var a_tile = a.tile[BM, BK](block_idx.y, block)
+    var b_tile = b.tile[BK, BN](block, block_idx.x)
 
-    var a_smem = tb[dtype]().row_major[BM, BK]().shared().alloc()
-    var b_smem = tb[dtype]().row_major[BK, BN]().shared().alloc()
+    copy_dram_to_sram_async[thread_layout=load_a_layout](a_smem, a_tile)
+    copy_dram_to_sram_async[thread_layout=load_b_layout](b_smem, b_tile)
 
-    var dst_reg: c.element_type = 0
+    async_copy_wait_all()
 
-    for block in range(b.dim(0) // BK):
-        alias load_a_layout = Layout.row_major(NUM_THREADS // BK, BK)
-        alias load_b_layout = Layout.row_major(BK, NUM_THREADS // BK)
+    barrier()
 
-        var a_tile = a.tile[BM, BK](block_idx.y, block)
-        var b_tile = b.tile[BK, BN](block, block_idx.x)
+    @parameter
+    for k in range(BK):
+        dst_reg += a_smem[row, k] * b_smem[k, col]
 
-        copy_dram_to_sram_async[thread_layout=load_a_layout](a_smem, a_tile)
-        copy_dram_to_sram_async[thread_layout=load_b_layout](b_smem, b_tile)
-
-        async_copy_wait_all()
-
-        barrier()
-
-        @parameter
-        for k in range(BK):
-            dst_reg += a_smem[row, k] * b_smem[k, col]
-
-        barrier()
-
-    dst[row, col] += dst_reg
+    barrier()
 ```
 
-This improves overall performance by ~30% over the previous optimization.
+The `async_copy_wait_all()` and `barrier()` calls ensure that all threads have
+completed their memory copies before proceeding to the next step, the inner
+loop, which accumulates the partial results for the current output tile. The
+`@parameter for` construct tells the compiler that this loop can be unrolled
+at compile time, since `BK` is a parameter, static at runtime.
+
+Finally, after all of the tiles have been processed, the results are written to
+the output tensor.
+
+```mojo
+dst[row, col] += dst_reg
+```
+
+All together, this kernel improves overall performance by ~30% over the previous
+optimization.
 
 **Note:** While faster on A100, this kernel may not show gains over the previous
 one on all GPUs.
@@ -449,137 +458,108 @@ Specifically, each thread calculates a column of 8 results:
 <img src="./images/matrix_multiplication_1D_blocktiled_dark.png" class="darkModeOnly">
 <img src="./images/matrix_multiplication_1D_blocktiled.png" class="lightModeOnly">
 
-Modifying the previous tiling to use
-tiled registers looks like:
+This kernel adds another new parameter to the signature, `TM`, which specifies
+the size of the register tile. You'll notice the code looks very similar to the
+previous kernel, except that the results are stored to a register tile. Also,
+note that the inner loop is structured so that the thread uses a single value
+from B for all of the calculations for a single register tile.
+
+Here's the interesting part of this kernel:
 
 ```mojo
-fn tiled_register_matrix_multiplication[
-    dtype: DType,
-    a_layout: Layout,
-    b_layout: Layout,
-    c_layout: Layout,
-    BM: Int,
-    BN: Int,
-    BK: Int,
-    TM: Int,
-    NUM_THREADS: Int,
-](
-    a: LayoutTensor[dtype, a_layout, MutableAnyOrigin],
-    b: LayoutTensor[dtype, b_layout, MutableAnyOrigin],
-    c: LayoutTensor[dtype, c_layout, MutableAnyOrigin],
-):
-    var col = thread_idx.x % BN
-    var row = thread_idx.x // BN
-    var bidx = block_idx.x
-    var bidy = block_idx.y
+var col = thread_idx.x % BN
+var row = thread_idx.x // BN
 
-    var dst = c.tile[BM, BN](bidy, bidx).tile[TM, 1](row, col)
+var dst = c.tile[BM, BN](block_idx.y, block_idx.x).tile[TM, 1](row, col)
 
-    var a_smem = tb[dtype]().row_major[BM, BK]().shared().alloc()
-    var b_smem = tb[dtype]().row_major[BK, BN]().shared().alloc()
+var a_smem = tb[dtype]().row_major[BM, BK]().shared().alloc()
+var b_smem = tb[dtype]().row_major[BK, BN]().shared().alloc()
 
-    var dst_reg = tb[dtype]().layout[TM]().local().alloc()
-    dst_reg.copy_from(dst)
+var dst_reg = tb[dtype]().layout[TM]().local().alloc()
+dst_reg.copy_from(dst)
 
-    for block in range(b.dim(0) // BK):
-        alias load_a_layout = Layout.row_major(NUM_THREADS // BK, BK)
-        alias load_b_layout = Layout.row_major(BK, NUM_THREADS // BK)
+for block in range(b.dim(0) // BK):
+    alias load_a_layout = Layout.row_major(NUM_THREADS // BK, BK)
+    alias load_b_layout = Layout.row_major(BK, NUM_THREADS // BK)
 
-        var a_tile = a.tile[BM, BK](block_idx.y, block)
-        var b_tile = b.tile[BK, BN](block, block_idx.x)
+    var a_tile = a.tile[BM, BK](block_idx.y, block)
+    var b_tile = b.tile[BK, BN](block, block_idx.x)
 
-        copy_dram_to_sram_async[thread_layout=load_a_layout](a_smem, a_tile)
-        copy_dram_to_sram_async[thread_layout=load_b_layout](b_smem, b_tile)
+    copy_dram_to_sram_async[thread_layout=load_a_layout](a_smem, a_tile)
+    copy_dram_to_sram_async[thread_layout=load_b_layout](b_smem, b_tile)
 
-        async_copy_wait_all()
-        barrier()
+    async_copy_wait_all()
+    barrier()
+
+    @parameter
+    for k in range(BK):
+        var a_tile = a_smem.tile[TM, 1](row, k)
+        var b_tile = b_smem.tile[1, BN](k, 0)
+        var b_val = b_tile[0, col]
 
         @parameter
-        for k in range(BK):
-            var a_tile = a_smem.tile[TM, 1](row, k)
-            var b_tile = b_smem.tile[1, BN](k, 0)
-            var b_val = b_tile[0, col]
+        for t in range(TM):
+            dst_reg[t] += a_tile[t, 0] * b_val
 
-            @parameter
-            for t in range(TM):
-                dst_reg[t] += a_tile[t, 0] * b_val
+    barrier()
 
-        barrier()
-
-    dst.copy_from(dst_reg)
-
+dst.copy_from(dst_reg)
 ```
 
 This gives a nearly 80% improvement over the previous tiling implementation.
 
 ### Kernel 5: Introducing block tiling
 
-We can further increase the arithmetic intensity of the calculation using a
-2-D block tiling strategy. In this kernel, each thread is responsible for calculating the output values for an 8x8 tile of the output tensor.
+We can further increase the arithmetic intensity of the calculation using a 2-D
+block tiling strategy. In this kernel, each thread is responsible for
+calculating the output values for a `TM`x`TN` tile of the output tensor. (Where
+`TM` and `TN` and kernel parameters; in this case we're using 8x8 tiles.)
 
 In addition to caching a block's worth of the A & B matrices in shared memory,
-each thread copies the 8x8 tiles of the input matrices into local storage to
+each thread copies 8-unit vectors of the input matrices into local storage to
 further reduce memory access latency. Then it uses the
-[`outer_product_acc()`](https://docs.modular.com/mojo/stdlib/layout/math/outer_product_acc/) function to
-calculate and accumulate the outer products of two vectors worth of values.
+[`outer_product_acc()`](https://docs.modular.com/mojo/stdlib/layout/math/outer_product_acc/)
+function to calculate and accumulate the outer products of the two vectors.
 
 ```mojo
-fn block_tiled_matrix_multiplication[
-    dtype: DType,
-    a_layout: Layout,
-    b_layout: Layout,
-    c_layout: Layout,
-    BM: Int,
-    BN: Int,
-    BK: Int,
-    TM: Int,
-    TN: Int,
-    NUM_THREADS: Int,
-](
-    a: LayoutTensor[dtype, a_layout, MutableAnyOrigin],
-    b: LayoutTensor[dtype, b_layout, MutableAnyOrigin],
-    c: LayoutTensor[dtype, c_layout, MutableAnyOrigin],
-):
-    var partition_col = thread_idx.x % (BN // TN)
-    var partition_row = thread_idx.x // (BN // TN)
-    var bidx = block_idx.x
-    var bidy = block_idx.y
+var partition_col = thread_idx.x % (BN // TN)
+var partition_row = thread_idx.x // (BN // TN)
 
-    var dst = c.tile[BM, BN](bidy, bidx).tile[TM, TN](
-        partition_row, partition_col
-    )
+var dst = c.tile[BM, BN](block_idx.y, block_idx.x).tile[TM, TN](
+    partition_row, partition_col
+)
 
-    var a_smem = tb[dtype]().row_major[BM, BK]().shared().alloc()
-    var b_smem = tb[dtype]().row_major[BK, BN]().shared().alloc()
+var a_smem = tb[dtype]().row_major[BM, BK]().shared().alloc()
+var b_smem = tb[dtype]().row_major[BK, BN]().shared().alloc()
 
-    var dst_reg = tb[dtype]().row_major[TM, TN]().local().alloc()
-    dst_reg.copy_from(dst)
-    var a_reg = tb[dtype]().layout[TM]().local().alloc()
-    var b_reg = tb[dtype]().layout[TN]().local().alloc()
+var dst_reg = tb[dtype]().row_major[TM, TN]().local().alloc()
+dst_reg.copy_from(dst)
+var a_reg = tb[dtype]().layout[TM]().local().alloc()
+var b_reg = tb[dtype]().layout[TN]().local().alloc()
 
-    var ntiles = b.dim(0) // BK
+var ntiles = b.dim(0) // BK
 
-    for block in range(ntiles):
-        alias load_a_layout = Layout.row_major(NUM_THREADS // BK, BK)
-        alias load_b_layout = Layout.row_major(BK, NUM_THREADS // BK)
-        var a_tile = a.tile[BM, BK](block_idx.y, block)
-        var b_tile = b.tile[BK, BN](block, block_idx.x)
-        copy_dram_to_sram_async[thread_layout=load_a_layout](a_smem, a_tile)
-        copy_dram_to_sram_async[thread_layout=load_b_layout](b_smem, b_tile)
+for block in range(ntiles):
+    alias load_a_layout = Layout.row_major(NUM_THREADS // BK, BK)
+    alias load_b_layout = Layout.row_major(BK, NUM_THREADS // BK)
+    var a_tile = a.tile[BM, BK](block_idx.y, block)
+    var b_tile = b.tile[BK, BN](block, block_idx.x)
+    copy_dram_to_sram_async[thread_layout=load_a_layout](a_smem, a_tile)
+    copy_dram_to_sram_async[thread_layout=load_b_layout](b_smem, b_tile)
 
-        async_copy_wait_all()
-        barrier()
+    async_copy_wait_all()
+    barrier()
 
-        @parameter
-        for k in range(BK):
-            var a_tile = a_smem.tile[TM, 1](partition_row, k)
-            var b_tile = b_smem.tile[1, TN](k, partition_col)
-            a_reg.copy_from(a_tile)
-            b_reg.copy_from(b_tile)
-            outer_product_acc(dst_reg, a_reg, b_reg)
-        barrier()
+    @parameter
+    for k in range(BK):
+        var a_tile = a_smem.tile[TM, 1](partition_row, k)
+        var b_tile = b_smem.tile[1, TN](k, partition_col)
+        a_reg.copy_from(a_tile)
+        b_reg.copy_from(b_tile)
+        outer_product_acc(dst_reg, a_reg, b_reg)
+    barrier()
 
-    dst.copy_from(dst_reg)
+dst.copy_from(dst_reg)
 ```
 
 In the above benchmarks, this provides an additional 50% boost over the
@@ -587,80 +567,63 @@ previous algorithm.
 
 ### Kernel 6: Block tiling with vectorized memory access
 
-As a final optimization, memory accesses can be vectorized to improve memory
-access bandwidth. The only new thing in this kernel is the use of the 
+As a final optimization to our block-tiling kernel, memory accesses can be
+vectorized to improve memory access bandwidth. The only new thing in this kernel
+is the use of the
 [`LayoutTensor.vectorize()`](https://docs.modular.com/mojo/stdlib/layout/layout_tensor/LayoutTensor#vectorize)
 method to produce vectorized views of the tensors, allowing multiple values to
 be copied as a single SIMD vector.
 
 ```mojo
-fn block_tiled_vectorized_matrix_multiplication[
-    dtype: DType,
-    a_layout: Layout,
-    b_layout: Layout,
-    c_layout: Layout,
-    BM: Int,
-    BN: Int,
-    BK: Int,
-    TM: Int,
-    TN: Int,
-    NUM_THREADS: Int,
-](
-    a: LayoutTensor[dtype, a_layout, MutableAnyOrigin],
-    b: LayoutTensor[dtype, b_layout, MutableAnyOrigin],
-    c: LayoutTensor[dtype, c_layout, MutableAnyOrigin],
-):
-    alias simd_width = simdwidthof[dtype]()
-    var partition_col = thread_idx.x % (BN // TN)
-    var partition_row = thread_idx.x // (BN // TN)
-    var bidx = block_idx.x
-    var bidy = block_idx.y
+alias simd_width = simdwidthof[dtype]()
+var partition_col = thread_idx.x % (BN // TN)
+var partition_row = thread_idx.x // (BN // TN)
 
-    var dst = c.tile[BM, BN](bidy, bidx).tile[TM, TN](
-        partition_row, partition_col
+var dst = c.tile[BM, BN](block_idx.y, block_idx.x).tile[TM, TN](
+    partition_row, partition_col
+)
+var dst_vec = dst.vectorize[1, simd_width]()
+
+var a_smem = tb[dtype]().col_major[BM, BK]().shared().alloc()
+var b_smem = tb[dtype]().row_major[BK, BN]().shared().alloc()
+
+var dst_reg = tb[dtype]().row_major[TM, TN]().local().alloc()
+var dst_reg_vec = dst_reg.vectorize[1, simd_width]()
+dst_reg_vec.copy_from(dst_vec)
+
+var a_reg = tb[dtype]().layout[TM]().local().alloc()
+var b_reg = tb[dtype]().layout[TN]().local().alloc()
+
+var ntiles = b.dim(0) // BK
+
+for block in range(ntiles):
+    alias load_a_layout = Layout.row_major(NUM_THREADS // BK, BK)
+    alias load_b_layout = Layout.row_major(BK, NUM_THREADS // BK)
+    var a_tile = a.tile[BM, BK](block_idx.y, block)
+    var b_tile = b.tile[BK, BN](block, block_idx.x)
+
+    copy_dram_to_sram_async[thread_layout=load_a_layout](
+        a_smem.vectorize[simd_width, 1](), a_tile.vectorize[simd_width, 1]()
     )
-    var dst_vec = dst.vectorize[1, simd_width]()
+    copy_dram_to_sram_async[thread_layout=load_b_layout](
+        b_smem.vectorize[1, simd_width](), b_tile.vectorize[1, simd_width]()
+    )
 
-    var a_smem = tb[dtype]().col_major[BM, BK]().shared().alloc()
-    var b_smem = tb[dtype]().row_major[BK, BN]().shared().alloc()
+    async_copy_wait_all()
+    barrier()
 
-    var dst_reg = tb[dtype]().row_major[TM, TN]().local().alloc()
-    var dst_reg_vec = dst_reg.vectorize[1, simd_width]()
-    dst_reg_vec.copy_from(dst_vec)
+    @parameter
+    for k in range(BK):
+        var a_tile = a_smem.tile[TM, 1](partition_row, k)
+        var b_tile = b_smem.tile[1, TN](k, partition_col)
+        a_reg.copy_from(a_tile)
+        b_reg.copy_from(b_tile)
 
-    var a_reg = tb[dtype]().layout[TM]().local().alloc()
-    var b_reg = tb[dtype]().layout[TN]().local().alloc()
+        outer_product_acc(dst_reg, a_reg, b_reg)
 
-    var ntiles = b.dim(0) // BK
+    barrier()
 
-    for block in range(ntiles):
-        alias load_a_layout = Layout.row_major(NUM_THREADS // BK, BK)
-        alias load_b_layout = Layout.row_major(BK, NUM_THREADS // BK)
-        var a_tile = a.tile[BM, BK](block_idx.y, block)
-        var b_tile = b.tile[BK, BN](block, block_idx.x)
-
-        copy_dram_to_sram_async[thread_layout=load_a_layout](
-            a_smem.vectorize[simd_width, 1](), a_tile.vectorize[simd_width, 1]()
-        )
-        copy_dram_to_sram_async[thread_layout=load_b_layout](
-            b_smem.vectorize[1, simd_width](), b_tile.vectorize[1, simd_width]()
-        )
-
-        async_copy_wait_all()
-        barrier()
-
-        @parameter
-        for k in range(BK):
-            var a_tile = a_smem.tile[TM, 1](partition_row, k)
-            var b_tile = b_smem.tile[1, TN](k, partition_col)
-            a_reg.copy_from(a_tile)
-            b_reg.copy_from(b_tile)
-
-            outer_product_acc(dst_reg, a_reg, b_reg)
-
-        barrier()
-
-    dst_vec.copy_from(dst_reg_vec)
+dst_vec.copy_from(dst_reg_vec)
 ```
 
 From beginning to end, we've realized more than a 36X improvement in matrix
