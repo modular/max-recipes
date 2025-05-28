@@ -6,9 +6,9 @@ readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
     "fastmcp>=2.3.4",
-    "fastui>=0.7.0",
     "modular>=25.3.0",
     "openai>=1.78.1",
+    "reflex>=0.7.6",
 ]
 
 [dependency-groups]
