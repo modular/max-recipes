@@ -3,7 +3,7 @@ from typing import Any
 import reflex as rx
 from reflex.event import EventSpec
 
-from .agent import process_query
+# from .agent import process_query
 
 
 class State(rx.State):
@@ -14,11 +14,11 @@ class State(rx.State):
         try:
             if isinstance(form_data["query"], str):
                 self.query = form_data["query"]
-                res = await process_query(self.query)
-                resp = f"There character {res.character_found}"
-                resp += " appears in the string {res.in_string} {res.num_times} "
-                resp += "time" if res.num_times == 1 else "times"
-                self.response = resp
+                # res = await process_query(self.query)
+                # resp = f"There character {res.character_found}"
+                # resp += " appears in the string {res.in_string} {res.num_times} "
+                # resp += "time" if res.num_times == 1 else "times"
+                # self.response = resp
             else:
                 raise ValueError("Form data did not include a query string")
         except Exception as e:
@@ -30,7 +30,6 @@ def form() -> rx.Component:
         rx.hstack(
             rx.form.field(
                 rx.form.control(
-                    rx.input(type="text"),
                     as_child=True,
                 ),
                 name="query",
