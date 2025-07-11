@@ -19,6 +19,25 @@ except ImportError:
     HAS_REQUESTS = False
     print("Warning: requests not available, skipping HTTP tests")
 
+# Try to check for CUDA accelerator availability
+try:
+    import max.driver
+    HAS_MAX = True
+    # Use max.driver.accelerator_api and accelerator_count to detect CUDA specifically
+    try:
+        accelerator_count = max.driver.accelerator_count()
+        accelerator_api = max.driver.accelerator_api()
+        HAS_CUDA = accelerator_count > 0 and accelerator_api == "cuda"
+        if HAS_CUDA:
+            print(f"Detected {accelerator_count} CUDA accelerator(s)")
+        elif accelerator_count > 0:
+            print(f"Detected {accelerator_count} {accelerator_api} accelerator(s), but this recipe requires CUDA")
+    except:
+        HAS_CUDA = False
+except ImportError:
+    HAS_MAX = False
+    HAS_CUDA = False
+
 
 class MultimodalRAGIntegrationTest:
     """Integration test for multimodal-rag-with-colpali-llamavision-reranker recipe."""
@@ -108,6 +127,29 @@ class MultimodalRAGIntegrationTest:
                 return False
         except (subprocess.TimeoutExpired, FileNotFoundError) as e:
             print(f"❌ Docker not available: {e}")
+            return False
+    
+    def check_cuda_available(self):
+        """Check if CUDA accelerators are available using max.driver API."""
+        if not HAS_MAX:
+            print("❌ MAX package not available")
+            return False
+        
+        try:
+            accelerator_count = max.driver.accelerator_count()
+            accelerator_api = max.driver.accelerator_api()
+            
+            if accelerator_count > 0 and accelerator_api == "cuda":
+                print(f"✅ Found {accelerator_count} CUDA accelerator(s)")
+                return True
+            elif accelerator_count > 0:
+                print(f"❌ Found {accelerator_count} {accelerator_api} accelerator(s), but this recipe requires CUDA")
+                return False
+            else:
+                print("❌ No accelerators detected")
+                return False
+        except Exception as e:
+            print(f"❌ Error checking CUDA availability: {e}")
             return False
     
     def wait_for_services(self):
@@ -255,6 +297,12 @@ class MultimodalRAGIntegrationTest:
                 print("✅ Configuration tests passed!")
                 return True
             
+            # Check CUDA availability
+            if not self.check_cuda_available():
+                print("❌ No CUDA accelerators available - skipping integration test")
+                print("✅ Configuration tests passed!")
+                return True
+            
             # Start services
             if not self.start_services():
                 print("❌ Failed to start services")
@@ -281,6 +329,7 @@ class MultimodalRAGIntegrationTest:
 def run_quick_config_test():
     """Run a quick configuration test without starting services."""
     print("Running quick configuration test...")
+    print("Note: This recipe requires NVIDIA GPU with 35GB+ VRAM (CUDA) - skipping dependency tests in CI")
     
     recipe_dir = Path(__file__).parent
     
@@ -314,6 +363,18 @@ def run_quick_config_test():
         return False
     print("✅ Found 'modular' package reference")
     
+    # Check for CUDA system requirements
+    if "[system-requirements]" not in content or "cuda" not in content:
+        print("❌ Missing CUDA system requirements")
+        return False
+    print("✅ CUDA system requirements specified")
+    
+    # Check for CUDA-dependent packages
+    if "torch" not in content or "torchvision" not in content:
+        print("❌ Missing CUDA-dependent packages (torch/torchvision)")
+        return False
+    print("✅ CUDA-dependent packages present (torch/torchvision)")
+    
     # Check Procfile uses pixi run
     procfile_path = recipe_dir / "Procfile"
     with open(procfile_path) as f:
@@ -333,6 +394,7 @@ def run_quick_config_test():
         print("✅ No outdated 'MAX Serve' references in app.py")
     
     print("✅ Quick configuration test passed!")
+    print("Note: Full integration test requires NVIDIA GPU (CUDA) environment")
     return True
 
 
