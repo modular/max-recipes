@@ -19,13 +19,16 @@ packages = ["."]
 
 [tool.pixi.project]
 channels = [
-    "conda-forge",
     "https://conda.modular.com/max-nightly",
+    "conda-forge",
 ]
 platforms = ["linux-64", "linux-aarch64", "osx-arm64"]
 
 [tool.pixi.pypi-dependencies]
 code_execution_sandbox_agent_with_e2b = { path = ".", editable = true }
+
+[tool.pixi.dependencies]
+modular = ">=25.5.0.dev2025070905,<26"
 
 [tool.pixi.tasks]
 server = "MAX_SERVE_PORT=8010 max serve --model-path modularai/Llama-3.1-8B-Instruct-GGUF --enable-structured-output"

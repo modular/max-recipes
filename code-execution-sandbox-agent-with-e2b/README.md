@@ -1,4 +1,4 @@
-# Build a Code Execution Agent with Llama, E2B Sandbox and MAX Serve
+# Build a Code Execution Agent with Llama, E2B Sandbox and MAX
 
 This recipe demonstrates how to build a secure code execution assistant that combines:
 
@@ -6,7 +6,7 @@ This recipe demonstrates how to build a secure code execution assistant that com
 * [E2B Code Interpreter](https://e2b.dev/) for secure code execution in sandboxed environments
 * [OpenAI's function calling format](https://platform.openai.com/docs/guides/function-calling) for structured outputs
 * [Rich](https://rich.readthedocs.io/) for beautiful terminal interfaces
-* [MAX Serve](https://docs.modular.com/max/serve/) for efficient model serving
+* [MAX](https://docs.modular.com/max/serve/) for efficient model serving
 
 The assistant provides:
 
@@ -17,24 +17,18 @@ The assistant provides:
 
 ## Requirements
 
-Please make sure your system meets our [system requirements](https://docs.modular.com/max/get-started).
+Please make sure your system meets our [system requirements](https://docs.modular.com/max/faq/#system-requirements).
 
-To proceed, ensure you have the `magic` CLI installed with the `magic --version` to be **0.7.2** or newer:
+To proceed, ensure you have the `pixi` CLI installed:
 
 ```bash
-curl -ssL https://magic.modular.com/ | bash
+curl -fsSL https://pixi.sh/install.sh | sh
 ```
 
-or update it via:
+...and updated to the latest version:
 
 ```bash
-magic self-update
-```
-
-Then install `max-pipelines` via:
-
-```bash
-magic global install -u max-pipelines
+pixi self-update
 ```
 
 ### Important: GPU requirements
@@ -56,11 +50,11 @@ This recipe requires a GPU with CUDA 12.5 support. Recommended GPUs:
 
 ### Installation
 
-1. Download the code using the `magic` CLI:
+1. Download the code for this recipe:
 
     ```bash
-    magic init code-execution-sandbox-agent-with-e2b --from modular/max-recipes/code-execution-sandbox-agent-with-e2b
-    cd code-execution-sandbox-agent-with-e2b
+    git clone https://github.com/modularml/max-recipes.git
+    cd max-recipes/code-execution-sandbox-agent-with-e2b
     ```
 
 2. Copy the environment template:
@@ -76,7 +70,7 @@ This recipe requires a GPU with CUDA 12.5 support. Recommended GPUs:
 1. Test the sandbox:
 
     ```bash
-    magic run hello
+    pixi run hello
     ```
 
     This command runs a simple test to verify your E2B sandbox setup. You'll see a "hello world" output and a list of available files in the sandbox environment, confirming that code execution is working properly.
@@ -86,15 +80,15 @@ This recipe requires a GPU with CUDA 12.5 support. Recommended GPUs:
     **Make sure the port `8010` is available. You can adjust the port settings in [pyproject.toml](./pyproject.toml).**
 
     ```bash
-    magic run server
+    pixi run server
     ```
 
-    This launches the Llama model with MAX Serve, enabling structured output parsing for reliable code generation. The server runs locally on port `8010` and uses the `--enable-structured-output` flag for OpenAI-compatible function calling.
+    This launches the Llama model with MAX, enabling structured output parsing for reliable code generation. The server runs locally on port `8010` and uses the `--enable-structured-output` flag for OpenAI-compatible function calling.
 
 3. Run the interactive agent:
 
     ```bash
-    magic run agent
+    pixi run agent
     ```
 
     This starts the interactive Python assistant. You can now type natural language queries like:
@@ -145,7 +139,7 @@ Here's how the components work together:
 2. **Llama Model**:
    * Processes natural language queries
    * Generates Python code using structured output format
-   * Runs locally via MAX Serve with function calling enabled
+   * Runs locally via MAX with function calling enabled
 
 3. **Structured Output Parser**:
    * Validates LLM responses using Pydantic models
@@ -496,7 +490,7 @@ console.print(Panel(..., theme="custom"))
    * Implement caching for responses
 
 2. **Deploy to Production**
-   * Deploy MAX Serve on [AWS, GCP or Azure](https://docs.modular.com/max/tutorials/max-serve-local-to-cloud/)
+   * Deploy MAX on [AWS, GCP or Azure](https://docs.modular.com/max/tutorials/max-serve-local-to-cloud/)
    * Set up CI/CD for documentation generation
    * Add monitoring and observability
    * Implement rate limiting and authentication
