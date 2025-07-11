@@ -1,6 +1,6 @@
 version: 1.0
-long_title: "Image to JSON: Multimodal Structured Output with Llama 3.2 Vision, MAX Serve and Pydantic"
-short_title: "MAX Serve Multi-Modal Structured Output"
+long_title: "Image to JSON: Multimodal Structured Output with Llama 3.2 Vision, MAX and Pydantic"
+short_title: "MAX Multi-Modal Structured Output"
 author: "Ehsan M. Kermani"
 author_image: "author/ehsan.jpg"
 author_url: "https://www.linkedin.com/in/ehsanmkermani/"
@@ -14,5 +14,5 @@ tags:
   - llama3-vision
 
 tasks:
-  - magic run server
-  - magic run main
+  - pixi run server
+  - pixi run main
