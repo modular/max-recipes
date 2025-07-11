@@ -1,8 +1,8 @@
 [project]
 authors = ["Modular <hello@modular.com>"]
 channels = [
-    "conda-forge",
     "https://conda.modular.com/max-nightly",
+    "conda-forge",
 ]
 description = "Add a short description here"
 name = "frontend"
@@ -19,3 +19,4 @@ demo = "honcho -f Procfile.demo start"
 docker-compose = ">=2.29"
 bash = ">=5.2.21,<6"
 honcho = ">=2.0.0,<3"
+modular = ">=25.5.0.dev2025070905,<26"

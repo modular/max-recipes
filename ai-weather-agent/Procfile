@@ -1,4 +1,4 @@
 max-serve-llm: MAX_SERVE_PORT=8010 HUGGING_FACE_HUB_TOKEN=$(cat backend/.env | grep HUGGING_FACE_HUB_TOKEN | cut -d '=' -f2) max serve --model-path modularai/Llama-3.1-8B-Instruct-GGUF --max-length 2048
 max-serve-embedding: MAX_SERVE_PORT=7999 HUGGING_FACE_HUB_TOKEN=$(cat backend/.env | grep HUGGING_FACE_HUB_TOKEN | cut -d '=' -f2) max serve --model-path sentence-transformers/all-mpnet-base-v2
-backend: cd backend && magic run backend
-frontend: cd frontend && magic run frontend
+backend: cd backend && pixi run backend
+frontend: cd frontend && pixi run frontend
