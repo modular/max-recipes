@@ -16,7 +16,7 @@ Let's get started.
 
 ## Requirements
 
-Please make sure your system meets our [system requirements](https://docs.modular.com/max/get-started).
+Please make sure your system meets our [system requirements](https://docs.modular.com/max/faq/#system-requirements).
 
 To proceed, ensure you have the `pixi` CLI installed:
 
