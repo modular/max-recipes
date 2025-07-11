@@ -1,4 +1,4 @@
-# Build a Continuous Chat App with MAX Serve and Llama 3
+# Build a Continuous Chat App with MAX and Llama 3
 
 In this recipe, we will cover:
 
@@ -9,7 +9,7 @@ In this recipe, we will cover:
 
 We'll walk through building a solution that showcases
 
-* MAX Serve capabilities
+* MAX capabilities
 * featuring efficient token management through rolling context windows
 * concurrent request handling
 * and straightforward deployment using Docker Compose for demonstration.
@@ -18,24 +18,12 @@ Let's get started.
 
 ## Requirements
 
-Please make sure your system meets our [system requirements](https://docs.modular.com/max/get-started).
+Please make sure your system meets our [system requirements](https://docs.modular.com/max/faq/#system-requirements).
 
-To proceed, ensure you have the `magic` CLI installed with the `magic --version` to be **0.7.2** or newer:
-
-```bash
-curl -ssL https://magic.modular.com/ | bash
-```
-
-or update it via:
+To proceed, ensure you have the `pixi` CLI installed. You can install it via:
 
 ```bash
-magic self-update
-```
-
-Then install `max-pipelines` via:
-
-```bash
-magic global install -u max-pipelines
+curl -fsSL https://pixi.sh/install.sh | bash
 ```
 
 For this recipe, you will need:
@@ -56,11 +44,11 @@ For running the app on GPU, ensure your system meets these GPU requirements:
 
 ## Quick start
 
-1. Download the code for this recipe using the `magic` CLI:
+1. Download the code for this recipe:
 
     ```bash
-    magic init max-serve-continuous-chat --from modular/max-recipes/max-serve-continuous-chat
-    cd max-serve-continuous-chat
+    git clone https://github.com/modular/max-recipes.git
+    cd max-recipes/max-serve-continuous-chat
     ```
 
 2. Set up your environment variables:
@@ -75,7 +63,7 @@ For running the app on GPU, ensure your system meets these GPU requirements:
     **Make sure the port `8000` is available. You can adjust the port settings in [Procfile](./Procfile).**
 
     ```bash
-    magic run app
+    pixi run app
     ```
 
     Once the Llama3 server and UI server are running, open <http://localhost:7860> to view the chat interface.
@@ -85,7 +73,7 @@ For running the app on GPU, ensure your system meets these GPU requirements:
 4. And once done with the app, to clean up the resources run:
 
     ```bash
-    magic run clean
+    pixi run clean
     ```
 
 ### (Optional) Attaching to a remote endpoint
@@ -125,7 +113,7 @@ or on [Kubernetes](https://docs.modular.com/max/tutorials/deploy-max-serve-on-ku
 ## Features of Llama 3 chat app
 
 * **Gradio-based interface**: A sleek, interactive UI built with [Gradio](https://www.gradio.app/) for intuitive interactions.
-* **Seamless integration**: Leverages Llama 3 models via MAX Serve on GPU, ensuring rapid and efficient chat responses.
+* **Seamless integration**: Leverages Llama 3 models via MAX on GPU, ensuring rapid and efficient chat responses.
 * **Customizable environment**: Adjust settings like context window size, batch size, and system prompts to suit your needs.
 * **Efficient continuous chat**: Employs a rolling context window implementation that dynamically maintains the chat context without exceeding the maximum token limit.
 
@@ -134,7 +122,7 @@ or on [Kubernetes](https://docs.modular.com/max/tutorials/deploy-max-serve-on-ku
 Our chat application consists of three main components:
 
 1. **Frontend layer**: A Gradio-based web interface that provides real-time chat interactions.
-2. **MAX Serve layer**: Our OpenAI-compatible API server that handles:
+2. **MAX layer**: Our OpenAI-compatible API server that handles:
     * Request batching and scheduling through advanced techniques such as continuous batching.
     * Token management and context windows.
     * Model inference optimization.‍
@@ -250,7 +238,7 @@ Key components:
 
 ### Server interaction
 
-The interface communicates with the Llama 3 model via the MAX Serve API to fetch chat completions.
+The interface communicates with the Llama 3 model via the MAX API to fetch chat completions.
 
 ```python
 async def respond(message, chat_history, config: ChatConfig, client, system_prompt):
@@ -284,7 +272,7 @@ async def respond(message, chat_history, config: ChatConfig, client, system_prom
 
 ### Health checks
 
-The `wait_for_healthy` function ensures the MAX Serve API is ready before processing requests, retrying until the server is live.
+The `wait_for_healthy` function ensures the MAX API is ready before processing requests, retrying until the server is live.
 
 ```python
 from tenacity import (
@@ -328,9 +316,9 @@ When deploying your chat application, consider these key factors:
     * Recommended: Start with 4096 and adjust based on your use case.
 
 2. **Continuous batching**:
-    * `MAX_BATCH_SIZE` controls concurrent request handling via the continuous batching (in MAX Serve `--max-batch-size`).
+    * `MAX_BATCH_SIZE` controls concurrent request handling via the continuous batching (in MAX `--max-batch-size`).
     * Higher values increase throughput but may impact latency.
-    * Recommended: Start with 1 and increase based on your GPU capacity. MAX Serve also gives a recommendation at the start for the optimal size.
+    * Recommended: Start with 1 and increase based on your GPU capacity. MAX also gives a recommendation at the start for the optimal size.
 
 3. **Memory management**:
     * Monitor GPU memory usage with `nvidia-smi`.
@@ -339,7 +327,6 @@ When deploying your chat application, consider these key factors:
 You can explore various configuration options by running:
 
 ```bash
-magic global install -u max-pipelines
 max serve --help
 ```
 
@@ -351,18 +338,18 @@ and the [benchmarking blog](http://www.modular.com/blog/max-gpu-state-of-the-art
 In this recipe, we've built a functional chat application using Llama 3 and MAX Serve. We've explored:
 
 * **Basic setup**: Using Docker and NVIDIA GPU support to create a working environment
-* **Architecture overview**: Creating a three-layer system with a Gradio frontend, MAX Serve API, and Llama 3 model backend
+* **Architecture overview**: Creating a three-layer system with a Gradio frontend, MAX API, and Llama 3 model backend
 * **Token management**: Implementing rolling context windows to maintain conversation history
 * **Performance basics**: Understanding batch processing and concurrent request handling
 * **Simple deployment**: Using Docker Compose to run the application
 * **Configuration options**: Managing environment variables and dependencies
 
-This recipe demonstrates how MAX Serving stack can be combined with Llama 3 to create interactive chat applications.
+This recipe demonstrates how MAX can be combined with Llama 3 to create interactive chat applications.
 While this implementation focuses on the basics, it provides a foundation that you can build upon for your own projects.
 
 ## Next Steps
 
-* Deploy Llama 3 on GPU with MAX Serve to [AWS, GCP or Azure](https://docs.modular.com/max/tutorials/max-serve-local-to-cloud/) or on
+* Deploy Llama 3 on GPU with MAX to [AWS, GCP or Azure](https://docs.modular.com/max/tutorials/max-serve-local-to-cloud/) or on
 [Kubernetes](https://docs.modular.com/max/tutorials/deploy-max-serve-on-kubernetes/).
 
 * Explore MAX's [documentation](https://docs.modular.com/max/) for additional features.

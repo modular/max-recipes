@@ -1,2 +1,2 @@
 llm: MAX_SERVE_PORT=8000 HUGGING_FACE_HUB_TOKEN=$(cat .env | grep HUGGING_FACE_HUB_TOKEN | cut -d '=' -f2) && max serve --model-path modularai/Llama-3.1-8B-Instruct-GGUF --max-length 4096
-ui: TOKENIZERS_PARALLELISM=false PORT=7860 magic run python ui.py
+ui: TOKENIZERS_PARALLELISM=false PORT=7860 pixi run python ui.py
