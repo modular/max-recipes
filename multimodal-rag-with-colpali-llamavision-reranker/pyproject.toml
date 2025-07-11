@@ -31,5 +31,5 @@ honcho = ">=2.0.0,<3"
 [tool.pixi.tasks]
 app = "honcho start"
 clean = "honcho -f Procfile.clean start"
-tests = "echo 'test passed'"
+tests = "python test.py"
 demo = "honcho -f Procfile.demo start"
