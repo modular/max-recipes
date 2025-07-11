@@ -1,5 +1,5 @@
 version: 1.0
-long_title: "Agentic Workflows: Build your own Weather Agent with MAX Serve, FastAPI and NextJS"
+long_title: "Agentic Workflows: Build your own Weather Agent with MAX, FastAPI and NextJS"
 short_title: "Build your own AI Weather Agent"
 author: "Ehsan M. Kermani"
 author_image: "author/ehsan.jpg"
@@ -15,5 +15,5 @@ tags:
   - observability
 
 tasks:
-  - magic run app
-  - magic run clean
+  - pixi run app
+  - pixi run clean

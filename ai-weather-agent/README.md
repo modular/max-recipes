@@ -1,4 +1,4 @@
-# Agentic Workflows: Build your own Weather Agent with MAX Serve, FastAPI and NextJS
+# Agentic Workflows: Build your own Weather Agent with MAX, FastAPI and NextJS
 
 This recipe demonstrates how to build an intelligent weather assistant that combines:
 
@@ -39,24 +39,12 @@ You'll learn how to:
 
 ## Requirements
 
-Please make sure your system meets our [system requirements](https://docs.modular.com/max/get-started).
+Please make sure your system meets our [system requirements](https://docs.modular.com/max/faq/#system-requirements).
 
-To proceed, ensure you have the `magic` CLI installed with the `magic --version` to be **0.7.2** or newer:
-
-```bash
-curl -ssL https://magic.modular.com/ | bash
-```
-
-or update it via:
+To proceed, ensure you have the `pixi` CLI installed. You can install it via:
 
 ```bash
-magic self-update
-```
-
-Then install `max-pipelines` via:
-
-```bash
-magic global install -u max-pipelines
+curl -fsSL https://pixi.sh/install.sh | bash
 ```
 
 For this recipe, you will also need:
@@ -74,11 +62,11 @@ echo "WEATHERAPI_API_KEY=your_api_key" >> backend/.env
 
 ## Quick start
 
-1. Download the code for this recipe using `magic` CLI:
+1. Download the code for this recipe:
 
     ```bash
-    magic init ai-weather-agent --from modular/max-recipes/ai-weather-agent
-    cd ai-weather-agent
+    git clone https://github.com/modular/max-recipes.git
+    cd max-recipes/ai-weather-agent
     ```
 
 2. Run the application:
@@ -86,15 +74,15 @@ echo "WEATHERAPI_API_KEY=your_api_key" >> backend/.env
     **Make sure the ports `7999, 8001` and `8010` are available. You can adjust the port settings in [Procfile](./Procfile).**
 
     ```bash
-    magic run app
+    pixi run app
     ```
 
     Note that it may take a few minutes for models to be downloaded and compiled.
 
 3. Open [http://localhost:3000](http://localhost:3000) in your browser to see the UI when **all services** below are ready:
 
-   * MAX Serve embedding on port `7999`
-   * MAX Serve Llama 3 on port `8000` and
+   * MAX embedding on port `7999`
+   * MAX Llama 3 on port `8000` and
    * Backend FastAPI on port `8001`
 
     <img src="ui.png" alt="Chat interface" width="100%" style="max-width: 800px;">
@@ -112,7 +100,7 @@ echo "WEATHERAPI_API_KEY=your_api_key" >> backend/.env
 4. And once done with the app, to clean up the resources run:
 
     ```bash
-    magic run clean
+    pixi run clean
     ```
 
 ## System architecture
@@ -125,12 +113,12 @@ The architecture consists of several key components:
 
 * **Frontend (Next.js)**: A modern React application providing real-time chat interface and weather visualization
 * **Backend (FastAPI)**: Orchestrates the entire flow, handling request routing and response generation
-* **MAX Serve**: Runs the Llama 3 model for intent detection, function calling, and response generation
+* **MAX**: Runs the Llama 3 model for intent detection, function calling, and response generation
 * **WeatherAPI**: External service providing current weather conditions and forecasts
 * **Sentence Transformers**: Used `sentence-transformers/all-mpnet-base-v2` for generating embeddings for semantic caching
 * **Semantic Cache**: Stores recent query results to improve response times
 
-Each component is designed to be independently scalable and maintainable. The backend uses FastAPI's async capabilities to handle concurrent requests efficiently, while MAX Serve provides high-performance inference for the LLM components.
+Each component is designed to be independently scalable and maintainable. The backend uses FastAPI's async capabilities to handle concurrent requests efficiently, while MAX provides high-performance inference for the LLM components.
 
 ## Request flow
 
@@ -404,7 +392,7 @@ class SemanticCache:
         self._lock = Lock()
 
     async def _compute_embedding(self, text: str) -> np.ndarray:
-        """Get embeddings from MAX Serve embedding endpoint"""
+        """Get embeddings from MAX embedding endpoint"""
         response = await embedding_client.embeddings.create(
             model=EMBEDDING_MODEL,
             input=text
@@ -597,7 +585,7 @@ const operationLabels: Record<string, string> = {
 Common issues and solutions:
 
 1. **LLM server connection issues**
-   * Ensure MAX Serve is running (`magic run app`)
+   * Ensure MAX is running (`pixi run app`)
    * Check logs for any GPU-related errors
    * Verify Hugging Face token is set correctly
 
@@ -670,7 +658,7 @@ The patterns and components shown here provide a solid foundation for building y
 Now that you've built a foundation for AI-powered applications, you can explore more advanced deployments and features:
 
 * Explore [MAX documentation](https://docs.modular.com/max/) for more features
-* Deploy MAX Serve on [AWS, GCP or Azure](https://docs.modular.com/max/tutorials/max-serve-local-to-cloud/)
+* Deploy MAX on [AWS, GCP or Azure](https://docs.modular.com/max/tutorials/max-serve-local-to-cloud/)
 * Join our [Modular Forum](https://forum.modular.com/) and [Discord community](https://discord.gg/modular)
 
 We're excited to see what you'll build with MAX! Share your projects with us using `#ModularAI` on social media.

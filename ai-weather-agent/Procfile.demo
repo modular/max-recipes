@@ -1,2 +1,2 @@
-backend: cd backend && magic run backend
-frontend: cd frontend && magic run frontend
+backend: cd backend && pixi run backend
+frontend: cd frontend && pixi run frontend
