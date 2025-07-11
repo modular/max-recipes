@@ -1,9 +1,8 @@
 
-# pixi environments
+# Pixi environments
 .pixi
 *.egg-info
-# magic environments
-.magic
+pixi.lock
 
 qdrant_storage
 .gradio

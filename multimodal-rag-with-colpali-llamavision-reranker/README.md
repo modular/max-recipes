@@ -1,4 +1,4 @@
-# Learn How to Build Multi-Modal RAG with Colpali, Llama3.2-Vision, Qdrant, Reranker and MAX Serve
+# Learn How to Build Multi-Modal RAG with Colpali, Llama3.2-Vision, Qdrant, Reranker and MAX
 
 This recipe demonstrates how to build a powerful multi-modal RAG (Retrieval Augmented Generation) system on PDF that combines:
 
@@ -6,7 +6,7 @@ This recipe demonstrates how to build a powerful multi-modal RAG (Retrieval Augm
 * [Qdrant vector database](https://qdrant.tech/documentation/quickstart/) for efficient similarity search
 * [meta-llama/Llama-3.2-11B-Vision](https://huggingface.co/meta-llama/Llama-3.2-11B-Vision) for visual question answering
 * [AnswerDotAI/rerankers](https://github.com/AnswerDotAI/rerankers) for enhancing retrieval with cross-encoder reranking
-* [MAX Serve](https://docs.modular.com/max/serve/) for efficient model serving and inference
+* [MAX](https://docs.modular.com/max/serve/) for efficient model serving and inference
 * [Gradio](https://www.gradio.app/) for an intuitive user interface
 
 While this recipe focuses on PDF documents, the patterns demonstrated here can be adapted for various multi-modal applications like:
@@ -43,31 +43,25 @@ This recipe requires a GPU with at least 35GB of VRAM to run efficiently. Recomm
 * NVIDIA A40 (48GB)
 * NVIDIA L40 (48GB)
 
-To proceed, ensure you have the `magic` CLI installed with the `magic --version` to be **0.7.2** or newer:
+To proceed, ensure you have the `pixi` CLI installed:
 
 ```bash
-curl -ssL https://magic.modular.com/ | bash
+curl -fsSL https://pixi.sh/install.sh | sh
 ```
 
-or update it via:
+...and updated to the latest version:
 
 ```bash
-magic self-update
-```
-
-Then install `max-pipelines` via:
-
-```bash
-magic global install -u max-pipelines
+pixi self-update
 ```
 
 ## Quick start
 
-1. Download the code for this recipe using the `magic` CLI:
+1. Download the code for this recipe:
 
     ```bash
-    magic init multimodal-rag-with-colpali-llamavision-reranker --from modular/max-recipes/multimodal-rag-with-colpali-llamavision-reranker
-    cd multimodal-rag-with-colpali-llamavision-reranker
+    git clone https://github.com/modularml/max-recipes.git
+    cd max-recipes/multimodal-rag-with-colpali-llamavision-reranker
     ```
 
 2. Run the application:
@@ -75,11 +69,11 @@ magic global install -u max-pipelines
     **Make sure the port `6333`, `6334` and `8010` are available. You can adjust the port settings in [Procfile](./Procfile).**
 
     ```bash
-    magic run app
+    pixi run app
     ```
 
     This command will:
-    * Start MAX Serve with `meta-llama/Llama-3.2-11B-Vision` on port `8010`
+    * Start MAX with `meta-llama/Llama-3.2-11B-Vision` on port `8010`
     * Launch Qdrant vector database on port `6333`
     * Start the Gradio interface on port `7860`
 
@@ -92,7 +86,7 @@ magic global install -u max-pipelines
 4. To clean up resources when done:
 
     ```bash
-    magic run clean
+    pixi run clean
     ```
 
 ## System architecture
@@ -112,7 +106,7 @@ graph TB
     end
 
     subgraph Services
-        MAX[MAX Serve]
+        MAX[MAX]
     end
 
     UI --> PDF
@@ -488,9 +482,9 @@ Common issues and solutions:
    * Solution: Ensure Docker is running
    * Check ports 6333 and 6334 are available
 
-4. **MAX Serve Issues**
-   * Error: "Connection refused to MAX Serve"
-   * Solution: Ensure MAX Serve is running
+4. **MAX Issues**
+   * Error: "Connection refused to MAX"
+   * Solution: Ensure MAX is running
    * Check GPU requirements are met
 
 ## Next steps
@@ -506,7 +500,7 @@ Now that you've built a multi-modal RAG system, you can:
    * Add memory for chat history context
 
 2. **Deploy to Production**
-   * Deploy MAX Serve on [AWS, GCP or Azure](https://docs.modular.com/max/tutorials/max-serve-local-to-cloud/)
+   * Deploy MAX on [AWS, GCP or Azure](https://docs.modular.com/max/tutorials/max-serve-local-to-cloud/)
    * Scale Qdrant with [cloud deployment](https://qdrant.tech/documentation/cloud/)
    * Add monitoring and observability
    * Implement rate limiting and authentication

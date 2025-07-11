@@ -448,7 +448,7 @@ class UI:
         with gr.Blocks(title="Multi-Modal PDF RAG", theme=gr.themes.Soft(), css=custom_css) as demo:
             gr.Markdown(
                 """
-                # Multi-Modal PDF RAG with ColPali, Llama3.2-Vision, Qdrant, Reranker powered by [MAX Serve](https://docs.modular.com/max/serve) 🚀
+                # Multi-Modal PDF RAG with ColPali, Llama3.2-Vision, Qdrant, Reranker powered by [MAX](https://docs.modular.com/max/serve) 🚀
                 ### A powerful document question-answering system combining state-of-the-art visual and language models
                 """
             )
@@ -488,9 +488,9 @@ class UI:
         demo.launch(share=False)
 
 def main():
-    logger.info("Checking if MAX Serve is healthy...")
-    wait_for_healthy(LLM_SERVER_URL, "MAX Serve", LLM_HEALTH_URL)
-    logger.info("MAX Serve is healthy")
+    logger.info("Checking if MAX is healthy...")
+    wait_for_healthy(LLM_SERVER_URL, "MAX", LLM_HEALTH_URL)
+    logger.info("MAX is healthy")
 
     logger.info("Checking if Qdrant is healthy...")
     wait_for_healthy(QDRANT_URL, "Qdrant", QDRANT_HEALTH_URL)
