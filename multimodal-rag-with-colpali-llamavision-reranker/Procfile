@@ -1,3 +1,3 @@
 llm-server: MAX_SERVE_PORT=8010 max serve --model-path meta-llama/Llama-3.2-11B-Vision-Instruct --max-length 2048 --max-batch-size 1
 qdrant-server: docker run -p 6333:6333 -p 6334:6334 -v "$(pwd)/qdrant_storage:/qdrant/storage:z" qdrant/qdrant
-app: magic run python app.py
+app: pixi run python app.py

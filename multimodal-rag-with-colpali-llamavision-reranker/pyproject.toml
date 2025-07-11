@@ -16,19 +16,20 @@ requires = ["hatchling"]
 packages = ["."]
 
 [tool.pixi.project]
-channels = ["conda-forge", "https://conda.modular.com/max-nightly"]
+channels = ["https://conda.modular.com/max-nightly", "conda-forge"]
 platforms = ["linux-64", "linux-aarch64"]
 
 [tool.pixi.pypi-dependencies]
-torch = { version = "==2.6.0", index = "https://download.pytorch.org/whl/cu126" }
-torchvision = { version = ">=0.20.1", index = "https://download.pytorch.org/whl/cu126" }
+torch = "==2.7.1"
+torchvision = "==0.22.1"
 multimodal_rag_with_colpali_llamavision_reranker = { path = ".", editable = true }
 
 [tool.pixi.dependencies]
+modular = ">=25.5.0.dev2025070905,<26"
 honcho = ">=2.0.0,<3"
 
 [tool.pixi.tasks]
 app = "honcho start"
 clean = "honcho -f Procfile.clean start"
-tests = "echo 'test passed'"
+tests = "python test.py"
 demo = "honcho -f Procfile.demo start"
