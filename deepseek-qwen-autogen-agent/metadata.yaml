@@ -1,6 +1,6 @@
 version: 1.0
-long_title: "Learn How to Build AI Agents with DeepSeek-R1, AutoGen and MAX Serve"
-short_title: "AI Agent with DeepSeek-R1, AutoGen and MAX Serve"
+long_title: "Learn How to Build AI Agents with DeepSeek-R1, AutoGen and MAX"
+short_title: "AI Agent with DeepSeek-R1, AutoGen and MAX"
 author: "Ehsan M. Kermani"
 author_image: "author/ehsan.jpg"
 author_url: "https://www.linkedin.com/in/ehsanmkermani/"
@@ -15,6 +15,6 @@ tags:
   - autogen
 
 tasks:
-  - magic run server
-  - magic run chat_agent
-  - magic run screenplay_agents
+  - pixi run server
+  - pixi run chat_agent
+  - pixi run screenplay_agents

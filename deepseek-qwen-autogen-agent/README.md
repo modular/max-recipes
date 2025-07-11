@@ -1,10 +1,10 @@
-# Learn How to Build AI Agents with DeepSeek-R1, AutoGen and MAX Serve
+# Learn How to Build AI Agents with DeepSeek-R1, AutoGen and MAX
 
 This recipe demonstrates how to build AI agents using:
 
 * [`DeepSeek-R1-Distill-Qwen-7B`](https://builds.modular.com/models/DeepSeek-R1-Distill-Qwen/7B) model that runs on GPU
 * [AutoGen](https://microsoft.github.io/autogen/stable/) framework for multi-agent conversations
-* [MAX Serve](https://docs.modular.com/max/serve/) for efficient model serving and inference
+* [MAX](https://docs.modular.com/max/serve/) for efficient model serving and inference
 * [Rich](https://rich.readthedocs.io/en/stable/introduction.html) Python library for beautiful terminal interfaces
 
 We'll create two example applications that showcase:
@@ -22,24 +22,18 @@ The patterns demonstrated here can be adapted for various agent-based applicatio
 
 ## Requirements
 
-Please make sure your system meets our [system requirements](https://docs.modular.com/max/get-started).
+Please make sure your system meets our [system requirements](https://docs.modular.com/max/faq/#system-requirements).
 
-To proceed, ensure you have the `magic` CLI installed with the `magic --version` to be **0.7.2** or newer:
+To proceed, ensure you have the `pixi` CLI installed:
 
 ```bash
-curl -ssL https://magic.modular.com/ | bash
+curl -fsSL https://pixi.sh/install.sh | sh
 ```
 
-or update it via:
+...and updated to the latest version:
 
 ```bash
-magic self-update
-```
-
-Then install `max-pipelines` via:
-
-```bash
-magic global install -u max-pipelines
+pixi self-update
 ```
 
 ### GPU requirements
@@ -52,19 +46,19 @@ This recipe requires a GPU with CUDA 12.5 support. Recommended GPUs:
 
 ## Quick start
 
-1. Download the code for this recipe using the `magic` CLI:
+1. Download the code for this recipe:
 
     ```bash
-    magic init deepseek-qwen-autogen-agent --from modular/max-recipes/deepseek-qwen-autogen-agent
-    cd deepseek-qwen-autogen-agent
+    git clone https://github.com/modularml/max-recipes.git
+    cd max-recipes/deepseek-qwen-autogen-agent
     ```
 
-2. Run the MAX Serve server via in a terminal:
+2. Run the MAX server via in a terminal:
 
     **Make sure the port `8010` is available. You can adjust the port settings in [pyproject.toml](./pyproject.toml).**
 
     ```bash
-    magic run server
+    pixi run server
     ```
 
 3. In a new terminal, run either example:
@@ -72,13 +66,13 @@ This recipe requires a GPU with CUDA 12.5 support. Recommended GPUs:
     * For the chat agent:
 
         ```bash
-        magic run chat_agent
+        pixi run chat_agent
         ```
 
     * For the screenplay development team:
 
         ```bash
-        magic run screenplay_agents
+        pixi run screenplay_agents
         ```
 
 The agents will be ready when you see the welcome message in your terminal.
@@ -138,7 +132,7 @@ assistant = AssistantAgent(
 
 Key features:
 
-* Uses DeepSeek-R1 model through MAX Serve
+* Uses DeepSeek-R1 model through MAX
 * Configurable temperature for response creativity
 * Adjust `max_tokens` for longer conversations
 
@@ -399,7 +393,7 @@ This recipe can be adapted for various applications:
 Common issues and solutions:
 
 1. **Server Connection Issues**
-   * Ensure MAX Serve is running (`magic run server`)
+   * Ensure MAX is running (`pixi run server`)
    * Check if the default port `8010` is available
    * Verify network connectivity
 
