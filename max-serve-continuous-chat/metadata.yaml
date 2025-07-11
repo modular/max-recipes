@@ -1,6 +1,6 @@
 version: 1.0
-long_title: "Build a Continuous Chat App with MAX Serve and Llama 3"
-short_title: "Continuous Chat App with MAX Serve"
+long_title: "Build a Continuous Chat App with MAX and Llama 3"
+short_title: "Continuous Chat App with MAX"
 author: "Ehsan M. Kermani"
 author_image: "author/ehsan.jpg"
 author_url: "https://www.linkedin.com/in/ehsanmkermani/"
@@ -12,5 +12,5 @@ tags:
   - llama3
 
 tasks:
-  - magic run app
-  - magic run clean
+  - pixi run app
+  - pixi run clean

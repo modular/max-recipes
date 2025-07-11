@@ -1,16 +1,15 @@
-FROM ghcr.io/modular/magic:noble AS build
+FROM ghcr.io/prefix-dev/pixi:0.37.0 AS build
 
 RUN apt-get update && apt-get install -y build-essential
 
 WORKDIR /app
 COPY pyproject.toml ui.py ./
 
-RUN magic clean
-RUN magic install
-RUN magic shell-hook > /shell-hook.sh && \
-    echo 'exec "$@" 2>&1' >> /shell-hook.sh
+RUN pixi install
+RUN echo '#!/bin/bash
+exec "$@" 2>&1' > /shell-hook.sh && chmod +x /shell-hook.sh
 
-FROM ghcr.io/modular/magic:noble AS runtime
+FROM ghcr.io/prefix-dev/pixi:0.37.0 AS runtime
 
 COPY --from=build /app /app
 COPY --from=build /shell-hook.sh /shell-hook.sh
@@ -19,4 +18,4 @@ WORKDIR /app
 ENV PYTHONUNBUFFERED=1
 
 ENTRYPOINT ["/bin/bash", "/shell-hook.sh"]
-CMD ["magic", "run", "python", "ui.py"]
+CMD ["pixi", "run", "python", "ui.py"]
