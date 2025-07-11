@@ -1,5 +1,5 @@
 version: 1.0
-long_title: "Build a Code Execution Agent with Llama, E2B Sandbox and MAX Serve"
+long_title: "Build a Code Execution Agent with Llama, E2B Sandbox and MAX"
 short_title: "Code Executor Agent with E2B Sandbox"
 author: "Ehsan M. Kermani"
 author_image: "author/ehsan.jpg"
@@ -14,6 +14,6 @@ tags:
   - structured-output
 
 tasks:
-  - magic run hello
-  - magic run server
-  - magic run agent
+  - pixi run hello
+  - pixi run server
+  - pixi run agent
