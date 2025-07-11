@@ -16,7 +16,7 @@ requires = ["hatchling"]
 packages = ["."]
 
 [tool.pixi.project]
-channels = ["conda-forge", "https://conda.modular.com/max-nightly"]
+channels = ["https://conda.modular.com/max-nightly", "conda-forge"]
 platforms = ["linux-64", "linux-aarch64"]
 
 [tool.pixi.pypi-dependencies]
@@ -28,4 +28,5 @@ main = "python main.py"
 tests = "echo 'test passed'"
 
 [tool.pixi.dependencies]
+modular = ">=25.5.0.dev2025070905,<26"
 honcho = ">=2.0.0,<3"
