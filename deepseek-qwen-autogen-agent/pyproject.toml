@@ -16,11 +16,14 @@ requires = ["hatchling"]
 packages = ["."]
 
 [tool.pixi.project]
-channels = ["conda-forge", "https://conda.modular.com/max-nightly"]
+channels = ["https://conda.modular.com/max-nightly", "conda-forge"]
 platforms = ["linux-64", "linux-aarch64", "osx-arm64"]
 
 [tool.pixi.pypi-dependencies]
 deepseek_qwen_autogen_agent = { path = ".", editable = true }
+
+[tool.pixi.dependencies]
+modular = ">=25.5.0.dev2025070905,<26"
 
 [tool.pixi.tasks]
 server = "MAX_SERVE_PORT=8010 max serve --model-path deepseek-ai/DeepSeek-R1-Distill-Qwen-7B --max-length 16384 --max-batch-size 1"
