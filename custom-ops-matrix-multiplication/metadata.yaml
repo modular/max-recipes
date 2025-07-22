@@ -11,6 +11,7 @@ tags:
   - max-graph
   - gpu-programming
   - mojo
+  - archived
 
 tasks:
   - magic run matrix_multiplication

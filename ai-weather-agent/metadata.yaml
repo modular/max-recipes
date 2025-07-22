@@ -13,6 +13,7 @@ tags:
   - embeddings
   - semantic-cache
   - observability
+  - gui
 
 tasks:
   - pixi run app

@@ -13,6 +13,7 @@ tags:
   - qwen
   - agent
   - autogen
+  - tui
 
 tasks:
   - pixi run server

@@ -12,6 +12,7 @@ tags:
   - qwen
   - qdrant
   - embeddings
+  - tui
 
 tasks:
   - uv run poe server

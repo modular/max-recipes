@@ -11,6 +11,7 @@ tags:
   - max-driver
   - gpu-programming
   - mojo
+  - archived
 
 tasks:
   - magic run vector_addition

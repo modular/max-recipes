@@ -10,6 +10,7 @@ difficulty: "beginner"
 tags:
   - max-graph
   - gpu-programming
+  - archived
 
 tasks:
   - pixi run graph

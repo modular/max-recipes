@@ -12,6 +12,7 @@ tags:
   - multimodal
   - structured-output
   - llama3-vision
+  - cli
 
 tasks:
   - pixi run server

@@ -13,6 +13,7 @@ tags:
   - fastmcp
   - fastapi
   - llama3
+  - gui
 
 tasks:
   - uv run invoke app

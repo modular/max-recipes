@@ -12,6 +12,7 @@ tags:
   - llama3
   - code-execution
   - structured-output
+  - tui
 
 tasks:
   - pixi run hello

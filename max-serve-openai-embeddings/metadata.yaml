@@ -10,6 +10,7 @@ difficulty: "beginner"
 tags:
   - max-serve
   - embeddings
+  - archived
 
 tasks:
   - magic run server

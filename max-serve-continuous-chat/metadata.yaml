@@ -10,6 +10,7 @@ difficulty: "intermediate"
 tags:
   - max-serve
   - llama3
+  - gui
 
 tasks:
   - pixi run app
